@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Climbing Score</string>
+    <string name="climb">Climb</string>
+    <string name="fall">Fall</string>
+    <string name="reset">Reset</string>
+    <string name="score">Score: %1$d</string>
+    <string name="change_language">English</string>
+</resources>

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Điểm số</string>
+    <string name="climb">Leo</string>
+    <string name="fall">Ngã</string>
+    <string name="reset">Làm mới</string>
+    <string name="score">Điểm: %1$d</string>
+    <string name="change_language">Tiếng Việt</string>
+</resources>
