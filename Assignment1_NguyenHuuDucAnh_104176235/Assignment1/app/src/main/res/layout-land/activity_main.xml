@@ -27,6 +27,16 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="16dp" />
 
+        <TextView
+            android:id="@+id/timerTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_toRightOf="@id/scoreTextView"
+            android:text="Time: 0"
+            android:textSize="24sp" />
+
         <Button
             android:id="@+id/climbButton"
             android:layout_width="wrap_content"
