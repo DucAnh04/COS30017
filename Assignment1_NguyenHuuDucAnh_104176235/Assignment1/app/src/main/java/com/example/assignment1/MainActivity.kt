@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
             }
             Log.d(TAG, "State restored: score=$score, currentHold=$currentHold, hasFallen=$hasFallen, timeElapsed=$timeElapsed")
         } else {
-            Log.d(TAG, "Starting new session with score=0")
+            Log.d(TAG, "Starting new session with score=0, time=0")
         }
 
         // Update the score display based on the current state.
@@ -96,10 +96,15 @@ class MainActivity : AppCompatActivity() {
         // Set the onClickListener for the Climb button.
         climbButton.setOnClickListener {
             // If the climber has fallen or already reached the maximum hold, ignore the climb attempt.
-            if (hasFallen || currentHold == MAX_HOLD) {
-                Log.d(TAG, "Climb attempt ignored.")
+            if (hasFallen) {
+                Log.d(TAG, "Climb attempt ignored. Because climber was fallen.")
                 return@setOnClickListener
             }
+            if (currentHold == MAX_HOLD) {
+                Log.d(TAG, "Climb attempt ignored. Because climber has reach highest before.")
+                return@setOnClickListener
+            }
+
 
             // If the timer is not already running, start it.
             if (!timerStarted) {
@@ -135,8 +140,16 @@ class MainActivity : AppCompatActivity() {
         // Set the onClickListener for the Fall button.
         fallButton.setOnClickListener {
             // Ignore the fall if the climber hasn't reached any hold, has already fallen, or is at the top.
-            if (currentHold < 1 || hasFallen || currentHold == MAX_HOLD) {
-                Log.d(TAG, "Fall attempt ignored.")
+            if (currentHold < 1) {
+                Log.d(TAG, "Fall attempt ignored. Because climber does not climb")
+                return@setOnClickListener
+            }
+            if (hasFallen){
+                Log.d(TAG, "Fall attempt ignored. Because climber was fallen before")
+                return@setOnClickListener
+            }
+            if (currentHold == MAX_HOLD){
+                Log.d(TAG, "Fall attempt ignored. Because climber has reached the highest")
                 return@setOnClickListener
             }
 
