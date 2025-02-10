@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 // Remove explicit absolute manifest path to let Robolectric auto-detect it.
-// Alternatively, if needed, you can use a relative path such as "src/main/AndroidManifest.xml".
 @Config(sdk = [28])
 class MainActivityTest {
 
@@ -92,7 +91,6 @@ class MainActivityTest {
         var scoreTextView = activity.findViewById<TextView>(R.id.scoreTextView)
         assertEquals("Score: 0", scoreTextView.text.toString())
 
-        // Find the languageButton and perform a click.
         // This triggers the changeLanguage() method which toggles the locale and calls recreate().
         val languageButton = activity.findViewById<Button>(R.id.languageButton)
         languageButton.performClick()
