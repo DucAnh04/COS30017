@@ -21,6 +21,7 @@ import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import kotlin.math.min
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
+import java.text.DecimalFormat  // Added for formatting percentage
 
 private const val TAG = "SummaryScreen"  // Added TAG constant for logging
 
@@ -48,8 +49,10 @@ fun SummaryScreen(viewModel: TaskViewModel) {
 
     // Calculate derived values for display.
     val incompleteTasks = totalTasks - completedTasks // Number of incomplete tasks.
-    // Calculate the completion rate as a percentage, avoiding division by zero.
-    val completionRate = if (totalTasks > 0) (completedTasks * 100 / totalTasks) else 0
+    // Calculate the completion rate as a float to retain decimal precision, avoiding division by zero.
+    val completionRate = if (totalTasks > 0) (completedTasks.toFloat() * 100 / totalTasks) else 0f
+    // Format the completion rate to one decimal place (e.g., "28.5%").
+    val formattedCompletionRate = DecimalFormat("0.#").format(completionRate) + "%"
 
     // Get the current device configuration to determine the screen orientation.
     val configuration = LocalConfiguration.current
@@ -70,7 +73,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
 
     // Log initial state and calculated values
     Log.d(TAG, "Screen initialized, isLandscape: $isLandscape, totalTasks: $totalTasks, " +
-            "completedTasks: $completedTasks, completionRate: $completionRate%, " +
+            "completedTasks: $completedTasks, completionRate: $formattedCompletionRate, " +
             "highPriority: $highPriorityTasks, mediumPriority: $mediumPriorityTasks, lowPriority: $lowPriorityTasks")
 
     // Use LazyColumn for efficient scrolling of the summary content.
@@ -99,7 +102,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                 ) {
                     // Display cards for total tasks, completion rate, completed today, and tasks due this week.
                     StatCard("Total Tasks", totalTasks.toString(), cardWidth)
-                    StatCard("Completion Rate", "$completionRate%", cardWidth)
+                    StatCard("Completion Rate", formattedCompletionRate, cardWidth)
                     StatCard("Completed Today", completedTasksToday.toString(), cardWidth)
                     StatCard("This Week", tasksDueThisWeek.toString(), cardWidth)
                 }
@@ -110,7 +113,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     StatCard("Total Tasks", totalTasks.toString(), cardWidth)
-                    StatCard("Completion Rate", "$completionRate%", cardWidth)
+                    StatCard("Completion Rate", formattedCompletionRate, cardWidth)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -159,7 +162,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                         ) {
                             LegendItem(color = darkGreen, label = "Completed", value = completedTasks)
                             LegendItem(color = darkRed, label = "Incomplete", value = incompleteTasks)
-                            LegendItem(color = darkMagenta, label = "Rate", value = "$completionRate%")
+                            LegendItem(color = darkMagenta, label = "Rate", value = formattedCompletionRate)
                         }
                     }
 
@@ -223,7 +226,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                     Column {
                         LegendItem(color = darkGreen, label = "Completed Tasks", value = completedTasks)
                         LegendItem(color = darkRed, label = "Incomplete Tasks", value = incompleteTasks)
-                        LegendItem(color = darkMagenta, label = "Completion Rate", value = "$completionRate%")
+                        LegendItem(color = darkMagenta, label = "Completion Rate", value = formattedCompletionRate)
                     }
                 }
             }
@@ -324,11 +327,12 @@ fun CircularTaskIndicator(
     val total = (completedTasks + incompleteTasks).toFloat()
     // Calculate the sweep angle for completed tasks (in degrees), avoiding division by zero.
     val completedSweepAngle = if (total > 0) (completedTasks / total) * 360f else 0f
-    // Calculate the completion rate as a percentage for display in the center.
-    val completionRate = if (total > 0) (completedTasks * 100 / total) else 0
+    // Calculate the completion rate as a float for display in the center, formatted to one decimal place.
+    val completionRate = if (total > 0) (completedTasks.toFloat() * 100 / total) else 0f
+    val formattedCompletionRate = DecimalFormat("0.#").format(completionRate) + "%"
 
     Log.d(TAG, "Rendering CircularTaskIndicator: completedTasks: $completedTasks, " +
-            "incompleteTasks: $incompleteTasks, completionRate: $completionRate%, " +
+            "incompleteTasks: $incompleteTasks, completionRate: $formattedCompletionRate, " +
             "sweepAngle: $completedSweepAngle")
 
     // Use a Box to overlay the completion rate text on the circular chart.
@@ -365,7 +369,7 @@ fun CircularTaskIndicator(
         }
         // Display the completion rate in the center of the chart.
         Text(
-            text = "$completionRate%",
+            text = formattedCompletionRate,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground // Uses the theme's onBackground color for contrast.
         )
