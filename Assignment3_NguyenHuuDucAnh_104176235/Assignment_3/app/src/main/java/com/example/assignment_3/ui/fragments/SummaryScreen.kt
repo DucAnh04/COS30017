@@ -21,7 +21,7 @@ import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import kotlin.math.min
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
-import java.text.DecimalFormat  // Added for formatting percentage
+import java.text.DecimalFormat 
 
 private const val TAG = "SummaryScreen"  // Added TAG constant for logging
 
