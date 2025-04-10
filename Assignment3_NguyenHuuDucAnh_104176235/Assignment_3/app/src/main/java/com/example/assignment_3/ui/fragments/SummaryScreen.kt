@@ -21,7 +21,7 @@ import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import kotlin.math.min
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
-import java.text.DecimalFormat 
+import java.text.DecimalFormat
 
 private const val TAG = "SummaryScreen"  // Added TAG constant for logging
 
@@ -46,13 +46,12 @@ fun SummaryScreen(viewModel: TaskViewModel) {
     val highPriorityTasks by viewModel.getHighPriorityTasks().observeAsState(initial = 0) // Number of high priority tasks.
     val mediumPriorityTasks by viewModel.getMediumPriorityTasks().observeAsState(initial = 0) // Number of medium priority tasks.
     val lowPriorityTasks by viewModel.getLowPriorityTasks().observeAsState(initial = 0) // Number of low priority tasks.
+    val overdueTasks by viewModel.overdueTasksCount.observeAsState(initial = 0) // Number of overdue tasks
 
     // Calculate derived values for display.
     val incompleteTasks = totalTasks - completedTasks // Number of incomplete tasks.
-    // Calculate the completion rate as a float to retain decimal precision, avoiding division by zero.
-    val completionRate = if (totalTasks > 0) (completedTasks.toFloat() * 100 / totalTasks) else 0f
-    // Format the completion rate to one decimal place (e.g., "28.5%").
-    val formattedCompletionRate = DecimalFormat("0.#").format(completionRate) + "%"
+    // Calculate the completion rate as a percentage, avoiding division by zero.
+    val completionRate = if (totalTasks > 0) (completedTasks * 100 / totalTasks) else 0
 
     // Get the current device configuration to determine the screen orientation.
     val configuration = LocalConfiguration.current
@@ -62,9 +61,9 @@ fun SummaryScreen(viewModel: TaskViewModel) {
     // Dynamically calculate the width of statistic cards based on screen width and orientation.
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp // Get the screen width in dp.
     val cardWidth = if (isLandscape) {
-        // In landscape mode, display 4 cards per row.
-        // Subtract 32dp (16dp padding on each side) and 48dp (16dp spacing between 4 cards) from screen width.
-        (screenWidth - 80.dp) / 4
+        // In landscape mode, display 5 cards per row (increased from 4 due to overdue stat).
+        // Subtract 32dp (16dp padding on each side) and 64dp (16dp spacing between 5 cards) from screen width.
+        (screenWidth - 96.dp) / 5
     } else {
         // In portrait mode, display 2 cards per row.
         // Subtract 32dp (16dp padding on each side) and 16dp (spacing between 2 cards) from screen width.
@@ -73,8 +72,9 @@ fun SummaryScreen(viewModel: TaskViewModel) {
 
     // Log initial state and calculated values
     Log.d(TAG, "Screen initialized, isLandscape: $isLandscape, totalTasks: $totalTasks, " +
-            "completedTasks: $completedTasks, completionRate: $formattedCompletionRate, " +
-            "highPriority: $highPriorityTasks, mediumPriority: $mediumPriorityTasks, lowPriority: $lowPriorityTasks")
+            "completedTasks: $completedTasks, completionRate: $completionRate%, " +
+            "highPriority: $highPriorityTasks, mediumPriority: $mediumPriorityTasks, lowPriority: $lowPriorityTasks, " +
+            "overdueTasks: $overdueTasks")
 
     // Use LazyColumn for efficient scrolling of the summary content.
     LazyColumn(
@@ -95,25 +95,26 @@ fun SummaryScreen(viewModel: TaskViewModel) {
         // Section 2: Statistics Cards
         item {
             if (isLandscape) {
-                // In landscape mode, display all 4 statistic cards in a single row.
+                // In landscape mode, display all 5 statistic cards in a single row.
                 Row(
                     modifier = Modifier.fillMaxWidth(), // Fills the available width.
                     horizontalArrangement = Arrangement.spacedBy(16.dp) // Adds 16dp spacing between cards.
                 ) {
-                    // Display cards for total tasks, completion rate, completed today, and tasks due this week.
+                    // Display cards for total tasks, completion rate, completed today, tasks due this week, and overdue tasks.
                     StatCard("Total Tasks", totalTasks.toString(), cardWidth)
-                    StatCard("Completion Rate", formattedCompletionRate, cardWidth)
+                    StatCard("Completion Rate", "$completionRate%", cardWidth)
                     StatCard("Completed Today", completedTasksToday.toString(), cardWidth)
                     StatCard("This Week", tasksDueThisWeek.toString(), cardWidth)
+                    StatCard("Overdue", overdueTasks.toString(), cardWidth) // Add overdue tasks stat
                 }
             } else {
-                // In portrait mode, display statistic cards in two rows with 2 cards each.
+                // In portrait mode, display statistic cards in three rows: 2 cards in the first two rows, 1 in the last.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     StatCard("Total Tasks", totalTasks.toString(), cardWidth)
-                    StatCard("Completion Rate", formattedCompletionRate, cardWidth)
+                    StatCard("Completion Rate", "$completionRate%", cardWidth)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -121,6 +122,14 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                 ) {
                     StatCard("Completed Today", completedTasksToday.toString(), cardWidth)
                     StatCard("This Week", tasksDueThisWeek.toString(), cardWidth)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    StatCard("Overdue", overdueTasks.toString(), cardWidth)
+                    // Add an empty spacer to maintain layout consistency
+                    Spacer(modifier = Modifier.width(cardWidth))
                 }
             }
         }
@@ -162,7 +171,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                         ) {
                             LegendItem(color = darkGreen, label = "Completed", value = completedTasks)
                             LegendItem(color = darkRed, label = "Incomplete", value = incompleteTasks)
-                            LegendItem(color = darkMagenta, label = "Rate", value = formattedCompletionRate)
+                            LegendItem(color = darkMagenta, label = "Rate", value = "$completionRate%")
                         }
                     }
 
@@ -226,7 +235,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
                     Column {
                         LegendItem(color = darkGreen, label = "Completed Tasks", value = completedTasks)
                         LegendItem(color = darkRed, label = "Incomplete Tasks", value = incompleteTasks)
-                        LegendItem(color = darkMagenta, label = "Completion Rate", value = formattedCompletionRate)
+                        LegendItem(color = darkMagenta, label = "Completion Rate", value = "$completionRate%")
                     }
                 }
             }
