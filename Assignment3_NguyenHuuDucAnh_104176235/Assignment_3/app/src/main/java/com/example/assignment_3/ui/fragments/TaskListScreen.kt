@@ -79,7 +79,8 @@ fun TaskListScreen(
                             onTaskClick(task) // Pass the task to the click callback.
                             Log.d(TAG, "Task clicked: ${task.name}, id: ${task.id}")
                         },
-                        isLandscape = isLandscape // Pass the orientation to adjust the layout.
+                        isLandscape = isLandscape, // Pass the orientation to adjust the layout.
+                        isOverdue = viewModel.isTaskOverdue(task) // Pass overdue status
                     )
                 }
             }
@@ -105,16 +106,17 @@ fun TaskListScreen(
 }
 
 // TaskItem is a composable function that displays a single task in a card format.
-// It takes a Task object, a click callback, and a boolean indicating if the device is in landscape mode.
+// It takes a Task object, a click callback, a boolean indicating if the device is in landscape mode, and a boolean indicating if the task is overdue.
 @Composable
-fun TaskItem(task: Task, onClick: () -> Unit, isLandscape: Boolean) {
+fun TaskItem(task: Task, onClick: () -> Unit, isLandscape: Boolean, isOverdue: Boolean) {
     // Load custom colors from resources for consistent theming of priority indicators.
     val darkRed = colorResource(id = R.color.dark_red) // Color for high priority tasks.
     val orange = colorResource(id = R.color.orange) // Color for medium priority tasks.
     val darkGreen = colorResource(id = R.color.dark_green) // Color for low priority tasks.
+    val lightRed = colorResource(id = R.color.light_red) // Color for overdue tasks background
 
     // Log task rendering
-    Log.d(TAG, "Rendering TaskItem: ${task.name}, priority: ${task.priority}, completed: ${task.isCompleted}")
+    Log.d(TAG, "Rendering TaskItem: ${task.name}, priority: ${task.priority}, completed: ${task.isCompleted}, overdue: $isOverdue")
 
     // Use a Card to display the task with a clickable area.
     Card(
@@ -122,7 +124,10 @@ fun TaskItem(task: Task, onClick: () -> Unit, isLandscape: Boolean) {
             .fillMaxWidth() // Fills the available width.
             .clickable { onClick() } // Makes the entire card clickable, invoking the onClick callback.
             .heightIn(min = if (isLandscape) 80.dp else 100.dp), // Sets a minimum height, shorter in landscape mode.
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Adds a 4dp elevation for a shadow effect.
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Adds a 4dp elevation for a shadow effect.
+        colors = CardDefaults.cardColors(
+            containerColor = if (isOverdue && !task.isCompleted) lightRed else MaterialTheme.colorScheme.surface // Light red background if overdue and not completed
+        )
     ) {
         // Use a Row to layout the task's icon and details side by side.
         Row(
@@ -157,6 +162,7 @@ fun TaskItem(task: Task, onClick: () -> Unit, isLandscape: Boolean) {
                     style = TextStyle(
                         fontSize = if (isLandscape) 18.sp else 20.sp, // Adjusts font size: 18sp in landscape, 20sp in portrait.
                     ),
+                    color = if (isOverdue && !task.isCompleted) darkRed else Color.DarkGray, // Dark red if overdue and not completed
                     modifier = Modifier.padding(top = 4.dp) // Adds 4dp padding above the text.
                 )
                 // Display the task's priority with a color based on the priority level.
