@@ -1,5 +1,6 @@
 package com.example.assignment_3.ui.fragments
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,8 @@ import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import kotlin.math.min
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
+
+private const val TAG = "SummaryScreen"  // Added TAG constant for logging
 
 // SummaryScreen is a composable function that displays a summary of task statistics,
 // including total tasks, completion rates, and priority breakdowns, using cards and circular indicators.
@@ -64,6 +67,11 @@ fun SummaryScreen(viewModel: TaskViewModel) {
         // Subtract 32dp (16dp padding on each side) and 16dp (spacing between 2 cards) from screen width.
         (screenWidth - 48.dp) / 2
     }
+
+    // Log initial state and calculated values
+    Log.d(TAG, "Screen initialized, isLandscape: $isLandscape, totalTasks: $totalTasks, " +
+            "completedTasks: $completedTasks, completionRate: $completionRate%, " +
+            "highPriority: $highPriorityTasks, mediumPriority: $mediumPriorityTasks, lowPriority: $lowPriorityTasks")
 
     // Use LazyColumn for efficient scrolling of the summary content.
     LazyColumn(
@@ -256,6 +264,7 @@ fun SummaryScreen(viewModel: TaskViewModel) {
 // It takes a title, value, and card width as parameters.
 @Composable
 fun StatCard(title: String, value: String, cardWidth: androidx.compose.ui.unit.Dp) {
+    Log.d(TAG, "Rendering StatCard: $title = $value")
     Card(
         modifier = Modifier
             .width(cardWidth) // Sets the card width to the calculated value.
@@ -278,6 +287,7 @@ fun StatCard(title: String, value: String, cardWidth: androidx.compose.ui.unit.D
 // It takes a color, label, and value as parameters.
 @Composable
 fun LegendItem(color: Color, label: String, value: Any) {
+    Log.d(TAG, "Rendering LegendItem: $label = $value")
     Row(
         verticalAlignment = Alignment.CenterVertically, // Aligns the circle and text vertically.
         modifier = Modifier
@@ -316,6 +326,10 @@ fun CircularTaskIndicator(
     val completedSweepAngle = if (total > 0) (completedTasks / total) * 360f else 0f
     // Calculate the completion rate as a percentage for display in the center.
     val completionRate = if (total > 0) (completedTasks * 100 / total) else 0
+
+    Log.d(TAG, "Rendering CircularTaskIndicator: completedTasks: $completedTasks, " +
+            "incompleteTasks: $incompleteTasks, completionRate: $completionRate%, " +
+            "sweepAngle: $completedSweepAngle")
 
     // Use a Box to overlay the completion rate text on the circular chart.
     Box(
@@ -376,6 +390,11 @@ fun CircularPriorityIndicator(
     val highSweepAngle = if (total > 0) (highPriority / total) * 360f else 0f
     val mediumSweepAngle = if (total > 0) (mediumPriority / total) * 360f else 0f
     val lowSweepAngle = if (total > 0) (lowPriority / total) * 360f else 0f
+
+    Log.d(TAG, "Rendering CircularPriorityIndicator: highPriority: $highPriority, " +
+            "mediumPriority: $mediumPriority, lowPriority: $lowPriority, " +
+            "highSweepAngle: $highSweepAngle, mediumSweepAngle: $mediumSweepAngle, " +
+            "lowSweepAngle: $lowSweepAngle")
 
     // Draw the circular chart using Canvas.
     Canvas(modifier = modifier) {
