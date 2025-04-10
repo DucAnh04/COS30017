@@ -1,5 +1,6 @@
 package com.example.assignment_3.ui.fragments
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,21 +10,23 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.livedata.observeAsState
+import com.example.assignment_3.R
+import com.example.assignment_3.data.Task
+import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
-import com.example.assignment_3.R
-import com.example.assignment_3.data.Task
-import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import android.content.res.Configuration
+
+private const val TAG = "TaskListScreen"  // Added TAG constant for logging
 
 // TaskListScreen is a composable function that displays a list of tasks with a floating action button to add new tasks.
 // It takes a TaskViewModel to fetch and observe tasks, a callback for task clicks, and a callback for adding a new task.
@@ -41,6 +44,9 @@ fun TaskListScreen(
     val configuration = LocalConfiguration.current
     // Check if the device is in landscape mode to adjust the layout accordingly.
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Log initial state
+    Log.d(TAG, "Screen initialized, isLandscape: $isLandscape, task count: ${tasks.size}")
 
     // Use a Box to position the FloatingActionButton over the task list.
     Box(
@@ -69,7 +75,10 @@ fun TaskListScreen(
                     // Render each task as a clickable TaskItem.
                     TaskItem(
                         task = task,
-                        onClick = { onTaskClick(task) }, // Pass the task to the click callback.
+                        onClick = {
+                            onTaskClick(task) // Pass the task to the click callback.
+                            Log.d(TAG, "Task clicked: ${task.name}, id: ${task.id}")
+                        },
                         isLandscape = isLandscape // Pass the orientation to adjust the layout.
                     )
                 }
@@ -78,7 +87,10 @@ fun TaskListScreen(
 
         // FloatingActionButton to add a new task.
         FloatingActionButton(
-            onClick = onAddTask, // Invokes the onAddTask callback when clicked.
+            onClick = {
+                onAddTask() // Invokes the onAddTask callback when clicked.
+                Log.d(TAG, "Add Task FAB clicked")
+            },
             modifier = Modifier
                 .align(if (isLandscape) Alignment.BottomEnd else Alignment.BottomEnd) // Aligns the FAB to the bottom-right corner.
                 .padding(
@@ -100,6 +112,9 @@ fun TaskItem(task: Task, onClick: () -> Unit, isLandscape: Boolean) {
     val darkRed = colorResource(id = R.color.dark_red) // Color for high priority tasks.
     val orange = colorResource(id = R.color.orange) // Color for medium priority tasks.
     val darkGreen = colorResource(id = R.color.dark_green) // Color for low priority tasks.
+
+    // Log task rendering
+    Log.d(TAG, "Rendering TaskItem: ${task.name}, priority: ${task.priority}, completed: ${task.isCompleted}")
 
     // Use a Card to display the task with a clickable area.
     Card(
