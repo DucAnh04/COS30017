@@ -1,6 +1,7 @@
 package com.example.assignment_3.ui.viewmodel
 
 import android.app.Application
+import android.util.Log 
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,6 +13,8 @@ import com.example.assignment_3.data.TaskRepository
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+
+private const val TAG = "TaskViewModel"  // Added TAG constant for logging
 
 // TaskViewModel is a ViewModel that manages task-related data and operations for the UI.
 // It extends AndroidViewModel to access the application context and uses a TaskRepository to interact with the database.
@@ -46,82 +49,104 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             // If the filter is "All", return all tasks; otherwise, fetch tasks by the specified priority.
             if (priority == "All") allTasks else repository.getTasksByPriority(priority)
         }
+        Log.d(TAG, "ViewModel initialized, initial filter: ${_currentFilter.value}")
     }
 
     // Sets the current filter to the specified priority, triggering an update to filteredTasks.
     fun setFilter(priority: String) {
         _currentFilter.value = priority // Update the filter value, which will update filteredTasks via switchMap.
+        Log.d(TAG, "Filter set to: $priority")
     }
 
     // Inserts a new task into the database.
     // Uses a coroutine to perform the operation on a background thread.
     fun insert(task: Task) = viewModelScope.launch {
+        Log.d(TAG, "Inserting task: ${task.name}, id: ${task.id}")
         repository.insert(task) // Calls the repository's insert method to add the task to the database.
+        Log.d(TAG, "Task inserted: ${task.name}")
     }
 
     // Updates an existing task in the database.
     // Uses a coroutine to perform the operation on a background thread.
     fun update(task: Task) = viewModelScope.launch {
+        Log.d(TAG, "Updating task: ${task.name}, id: ${task.id}")
         repository.update(task) // Calls the repository's update method to modify the task in the database.
+        Log.d(TAG, "Task updated: ${task.name}")
     }
 
     // Deletes a task from the database.
     // Uses a coroutine to perform the operation on a background thread.
     fun delete(task: Task) = viewModelScope.launch {
+        Log.d(TAG, "Deleting task: ${task.name}, id: ${task.id}")
         repository.delete(task) // Calls the repository's delete method to remove the task from the database.
+        Log.d(TAG, "Task deleted: ${task.name}")
     }
 
     // Retrieves tasks filtered by the specified priority.
     // Returns a LiveData object for the UI to observe.
     fun getTasksByPriority(priority: String): LiveData<List<Task>> {
+        Log.d(TAG, "Fetching tasks by priority: $priority")
         return repository.getTasksByPriority(priority) // Delegates to the repository to fetch tasks by priority.
     }
 
     // Retrieves the total number of tasks in the database.
     // Returns a LiveData object for the UI to observe.
     fun getTotalTasks(): LiveData<Int> {
+        Log.d(TAG, "Fetching total tasks count")
         return repository.getTotalTasks() // Delegates to the repository to fetch the total task count.
     }
 
     // Retrieves the number of completed tasks in the database.
     // Returns a LiveData object for the UI to observe.
     fun getCompletedTasks(): LiveData<Int> {
+        Log.d(TAG, "Fetching completed tasks count")
         return repository.getCompletedTasks() // Delegates to the repository to fetch the completed task count.
     }
 
     // Retrieves the number of tasks completed today.
     // Returns a LiveData object for the UI to observe.
     fun getCompletedTasksToday(): LiveData<Int> {
+        Log.d(TAG, "Fetching tasks completed today count")
         return repository.getCompletedTasksToday() // Delegates to the repository to fetch today's completed tasks.
     }
 
     // Retrieves the number of tasks due within the current week.
     // Returns a LiveData object for the UI to observe.
     fun getTasksDueThisWeek(): LiveData<Int> {
+        Log.d(TAG, "Fetching tasks due this week count")
         return repository.getTasksDueThisWeek() // Delegates to the repository to fetch tasks due this week.
     }
 
     // Retrieves the number of high-priority tasks.
     // Transforms the LiveData<List<Task>> into LiveData<Int> by mapping the list size.
     fun getHighPriorityTasks(): LiveData<Int> {
+        Log.d(TAG, "Fetching high priority tasks count")
         return repository.getTasksByPriority("High").switchMap { tasks ->
-            MutableLiveData(tasks.size) // Converts the list of high-priority tasks to its size.
+            val count = tasks.size
+            Log.d(TAG, "High priority tasks count: $count")
+            MutableLiveData(count) // Converts the list of high-priority tasks to its size.
         }
     }
 
     // Retrieves the number of medium-priority tasks.
     // Transforms the LiveData<List<Task>> into LiveData<Int> by mapping the list size.
     fun getMediumPriorityTasks(): LiveData<Int> {
+        Log.d(TAG, "Fetching medium priority tasks count")
         return repository.getTasksByPriority("Medium").switchMap { tasks ->
-            MutableLiveData(tasks.size) // Converts the list of medium-priority tasks to its size.
+            val count = tasks.size
+            Log.d(TAG, "Medium priority tasks count: $count")
+            MutableLiveData(count) // Converts the list of medium-priority tasks to its size.
         }
     }
 
     // Retrieves the number of low-priority tasks.
     // Transforms the LiveData<List<Task>> into LiveData<Int> by mapping the list size.
     fun getLowPriorityTasks(): LiveData<Int> {
+        Log.d(TAG, "Fetching low priority tasks count")
         return repository.getTasksByPriority("Low").switchMap { tasks ->
-            MutableLiveData(tasks.size) // Converts the list of low-priority tasks to its size.
+            val count = tasks.size
+            Log.d(TAG, "Low priority tasks count: $count")
+            MutableLiveData(count) // Converts the list of low-priority tasks to its size.
         }
     }
 }
