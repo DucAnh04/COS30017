@@ -1,7 +1,7 @@
 package com.example.assignment_3.ui.viewmodel
 
 import android.app.Application
-import android.util.Log 
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -36,6 +36,11 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     // Updates automatically when the filter changes.
     val filteredTasks: LiveData<List<Task>>
 
+    // Add LiveData for the count of overdue tasks
+    val overdueTasksCount: LiveData<Int>
+
+    private val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
     // Initialization block to set up the ViewModel.
     init {
         // Get the TaskDao instance from the TaskDatabase singleton, using the application context.
@@ -49,7 +54,26 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
             // If the filter is "All", return all tasks; otherwise, fetch tasks by the specified priority.
             if (priority == "All") allTasks else repository.getTasksByPriority(priority)
         }
+        // Set up overdueTasksCount by filtering allTasks for overdue tasks
+        overdueTasksCount = allTasks.switchMap { tasks ->
+            val overdueCount = tasks.count { task ->
+                !task.isCompleted && isTaskOverdue(task)
+            }
+            MutableLiveData(overdueCount)
+        }
         Log.d(TAG, "ViewModel initialized, initial filter: ${_currentFilter.value}")
+    }
+
+    // Check if a task is overdue by comparing its due date with the current date
+    fun isTaskOverdue(task: Task): Boolean {
+        return try {
+            val dueDate = dateFormatter.parse(task.dueDate)
+            val currentDate = Calendar.getInstance().time
+            dueDate != null && dueDate.before(currentDate) // Task is overdue if due date is before now
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing due date for task ${task.name}: ${e.message}")
+            false // If parsing fails, assume the task is not overdue
+        }
     }
 
     // Sets the current filter to the specified priority, triggering an update to filteredTasks.
