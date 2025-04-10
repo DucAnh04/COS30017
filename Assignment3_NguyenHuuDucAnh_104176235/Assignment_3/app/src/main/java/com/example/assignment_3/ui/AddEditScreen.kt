@@ -1,5 +1,6 @@
 package com.example.assignment_3.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -22,6 +23,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+
+private const val TAG = "AddEditScreen"  // Added TAG constant for logging
 
 // Opt-in for experimental Material3 APIs (e.g., DatePicker, TimePicker).
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +50,9 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
     // Get the current date and time for validation purposes (to ensure due date is not in the past).
     val today = Calendar.getInstance()
 
+    // Log initial state
+    Log.d(TAG, "Screen initialized with taskId: $taskId")
+
     // LaunchedEffect to load task data when editing an existing task.
     // This runs whenever taskId changes.
     LaunchedEffect(taskId) {
@@ -59,7 +65,8 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                 dueDateTime = task.dueDate
                 priority = task.priority
                 isCompleted = task.isCompleted
-            }
+                Log.d(TAG, "Loaded task data: ${task.toString()}")
+            } ?: Log.d(TAG, "No task found for id: $taskId")
         }
     }
 
@@ -70,20 +77,23 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
             is ActionState.SaveSuccess -> {
                 // Show a Toast confirming the task was saved successfully.
                 Toast.makeText(context, "Task saved successfully", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Save successful, navigating back")
                 // Navigate back to the TaskListScreen after showing the Toast.
                 navController.popBackStack()
             }
             is ActionState.DeleteSuccess -> {
                 // Show a Toast confirming the task was deleted.
                 Toast.makeText(context, "Task deleted", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Delete successful, navigating back")
                 // Navigate back to the TaskListScreen after showing the Toast.
                 navController.popBackStack()
             }
             is ActionState.ValidationError -> {
                 // Show a Toast with the validation error message (e.g., "Due date cannot be in the past").
                 Toast.makeText(context, actionState!!.message, Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Validation error: ${actionState!!.message}")
             }
-            null -> {} // No action to take if actionState is null.
+            null -> {} // No action to take if action TraumaticState is null.
         }
     }
 
@@ -93,6 +103,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     if (isLandscape) {
+        Log.d(TAG, "Rendering in landscape mode")
         // Landscape Mode: Split the form into two columns for better space utilization.
         Row(
             modifier = Modifier
@@ -116,7 +127,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                 // Text field for entering the task name.
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it }, // Updates the name state when the user types.
+                    onValueChange = {
+                        name = it // Updates the name state when the user types.
+                        Log.d(TAG, "Name changed to: $it")
+                    },
                     label = { Text("Task Name", style = TextStyle(fontSize = 18.sp)) }, // Label with increased font size.
                     modifier = Modifier.fillMaxWidth(), // Fills the available width.
                     textStyle = TextStyle(fontSize = 20.sp) // Increased input text size.
@@ -125,7 +139,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                 // Text field for entering the task description.
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it }, // Updates the description state when the user types.
+                    onValueChange = {
+                        description = it // Updates the description state when the user types.
+                        Log.d(TAG, "Description changed to: $it")
+                    },
                     label = { Text("Description", style = TextStyle(fontSize = 18.sp)) }, // Label with increased font size.
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = TextStyle(fontSize = 20.sp) // Increased input text size.
@@ -150,10 +167,16 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                     trailingIcon = {
                         // Row containing icons for date and time pickers.
                         Row {
-                            IconButton(onClick = { showDatePicker = true }) { // Opens the date picker dialog.
+                            IconButton(onClick = {
+                                showDatePicker = true // Opens the date picker dialog.
+                                Log.d(TAG, "Date picker opened")
+                            }) {
                                 Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
                             }
-                            IconButton(onClick = { showTimePicker = true }) { // Opens the time picker dialog.
+                            IconButton(onClick = {
+                                showTimePicker = true // Opens the time picker dialog.
+                                Log.d(TAG, "Time picker opened")
+                            }) {
                                 Icon(Icons.Default.AccessTime, contentDescription = "Select Time")
                             }
                         }
@@ -176,7 +199,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                         }
                     )
                     DatePickerDialog(
-                        onDismissRequest = { showDatePicker = false }, // Closes the dialog when dismissed.
+                        onDismissRequest = {
+                            showDatePicker = false // Closes the dialog when dismissed.
+                            Log.d(TAG, "Date picker dismissed")
+                        },
                         confirmButton = {
                             TextButton(onClick = {
                                 // Update the due date with the selected date, keeping the existing time.
@@ -186,6 +212,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                                     dueDateTime = newDateTime
                                     // Validate the new date-time and update the error state.
                                     dateError = validateDateTime(newDateTime, today, dateTimeFormatter)
+                                    Log.d(TAG, "Date selected: $newDateTime, error: $dateError")
                                     // If the date is in the past, show a Toast message.
                                     if (dateError == "Date and time cannot be in the past") {
                                         actionState = ActionState.ValidationError("Due date cannot be in the past")
@@ -215,7 +242,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                         is24Hour = true // Use 24-hour format.
                     )
                     TimePickerDialog(
-                        onDismissRequest = { showTimePicker = false }, // Closes the dialog when dismissed.
+                        onDismissRequest = {
+                            showTimePicker = false // Closes the dialog when dismissed.
+                            Log.d(TAG, "Time picker dismissed")
+                        },
                         confirmButton = {
                             TextButton(onClick = {
                                 // Update the due time with the selected time, keeping the existing date.
@@ -224,6 +254,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                                 dueDateTime = newDateTime
                                 // Validate the new date-time and update the error state.
                                 dateError = validateDateTime(newDateTime, today, dateTimeFormatter)
+                                Log.d(TAG, "Time selected: $newDateTime, error: $dateError")
                                 // If the date is in the past, show a Toast message.
                                 if (dateError == "Date and time cannot be in the past") {
                                     actionState = ActionState.ValidationError("Due date cannot be in the past")
@@ -254,14 +285,20 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                         readOnly = true,
                         textStyle = TextStyle(fontSize = 20.sp), // Increased input text size.
                         trailingIcon = {
-                            IconButton(onClick = { expanded = true }) { // Opens the dropdown menu.
+                            IconButton(onClick = {
+                                expanded = true // Opens the dropdown menu.
+                                Log.d(TAG, "Priority dropdown opened")
+                            }) {
                                 Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Priority")
                             }
                         }
                     )
                     DropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }, // Closes the dropdown when dismissed.
+                        onDismissRequest = {
+                            expanded = false // Closes the dropdown when dismissed.
+                            Log.d(TAG, "Priority dropdown dismissed")
+                        },
                         modifier = Modifier.fillMaxWidth() // Makes the dropdown as wide as the text field.
                     ) {
                         // Populate the dropdown with priority options.
@@ -271,6 +308,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                                 onClick = {
                                     priority = option // Update the priority state.
                                     expanded = false // Close the dropdown.
+                                    Log.d(TAG, "Priority selected: $option")
                                 }
                             )
                         }
@@ -282,7 +320,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = isCompleted,
-                            onCheckedChange = { isCompleted = it } // Updates the completion status.
+                            onCheckedChange = {
+                                isCompleted = it // Updates the completion status.
+                                Log.d(TAG, "Completed status changed to: $it")
+                            }
                         )
                         Text("Completed", style = TextStyle(fontSize = 18.sp)) // Checkbox label with increased font size.
                     }
@@ -321,6 +362,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                                 priority = priority,
                                 isCompleted = if (taskId == -1) false else isCompleted // New tasks are not completed by default.
                             )
+                            Log.d(TAG, "Saving task: ${task.toString()}")
                             if (taskId == -1) {
                                 // Insert a new task into the database.
                                 viewModel.insert(task)
@@ -346,6 +388,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                             onClick = {
                                 // Find the task with the given ID and delete it.
                                 viewModel.allTasks.value?.find { it.id == taskId }?.let { task ->
+                                    Log.d(TAG, "Deleting task: ${task.toString()}")
                                     viewModel.delete(task)
                                     // Set actionState to trigger a success Toast and navigation.
                                     actionState = ActionState.DeleteSuccess
@@ -361,6 +404,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
             }
         }
     } else {
+        Log.d(TAG, "Rendering in portrait mode")
         // Portrait Mode: Display all form fields in a single column for a compact layout.
         Column(
             modifier = Modifier
@@ -377,7 +421,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
             // Task Name Field: Allows the user to input the task name.
             OutlinedTextField(
                 value = name, // Binds the text field to the name state variable.
-                onValueChange = { name = it }, // Updates the name state when the user types.
+                onValueChange = {
+                    name = it // Updates the name state when the user types.
+                    Log.d(TAG, "Name changed to: $it")
+                },
                 label = { Text("Task Name", style = TextStyle(fontSize = 18.sp)) }, // Label with increased font size for clarity.
                 modifier = Modifier.fillMaxWidth(), // Fills the available width of the column.
                 textStyle = TextStyle(fontSize = 20.sp) // Increased input text size for better readability.
@@ -386,7 +433,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
             // Description Field: Allows the user to input an optional task description.
             OutlinedTextField(
                 value = description, // Binds the text field to the description state variable.
-                onValueChange = { description = it }, // Updates the description state when the user types.
+                onValueChange = {
+                    description = it // Updates the description state when the user types.
+                    Log.d(TAG, "Description changed to: $it")
+                },
                 label = { Text("Description", style = TextStyle(fontSize = 18.sp)) }, // Label with increased font size.
                 modifier = Modifier.fillMaxWidth(), // Fills the available width of the column.
                 textStyle = TextStyle(fontSize = 20.sp) // Increased input text size.
@@ -403,10 +453,16 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                 trailingIcon = {
                     // Row containing icons for date and time pickers.
                     Row {
-                        IconButton(onClick = { showDatePicker = true }) { // Opens the date picker dialog when clicked.
+                        IconButton(onClick = {
+                            showDatePicker = true // Opens the date picker dialog when clicked.
+                            Log.d(TAG, "Date picker opened")
+                        }) {
                             Icon(Icons.Default.CalendarToday, contentDescription = "Select Date") // Calendar icon for date selection.
                         }
-                        IconButton(onClick = { showTimePicker = true }) { // Opens the time picker dialog when clicked.
+                        IconButton(onClick = {
+                            showTimePicker = true // Opens the time picker dialog when clicked.
+                            Log.d(TAG, "Time picker opened")
+                        }) {
                             Icon(Icons.Default.AccessTime, contentDescription = "Select Time") // Clock icon for time selection.
                         }
                     }
@@ -429,7 +485,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                     }
                 )
                 DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false }, // Closes the dialog when dismissed (e.g., back button).
+                    onDismissRequest = {
+                        showDatePicker = false // Closes the dialog when dismissed (e.g., back button).
+                        Log.d(TAG, "Date picker dismissed")
+                    },
                     confirmButton = {
                         TextButton(onClick = {
                             // Update the due date with the selected date, keeping the existing time.
@@ -439,6 +498,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                                 dueDateTime = newDateTime // Update the dueDateTime state.
                                 // Validate the new date-time and update the error state.
                                 dateError = validateDateTime(newDateTime, today, dateTimeFormatter)
+                                Log.d(TAG, "Date selected: $newDateTime, error: $dateError")
                                 // If the date is in the past, show a Toast message.
                                 if (dateError == "Date and time cannot be in the past") {
                                     actionState = ActionState.ValidationError("Due date cannot be in the past")
@@ -468,7 +528,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                     is24Hour = true // Uses 24-hour format for consistency.
                 )
                 TimePickerDialog(
-                    onDismissRequest = { showTimePicker = false }, // Closes the dialog when dismissed.
+                    onDismissRequest = {
+                        showTimePicker = false // Closes the dialog when dismissed.
+                        Log.d(TAG, "Time picker dismissed")
+                    },
                     confirmButton = {
                         TextButton(onClick = {
                             // Update the due time with the selected time, keeping the existing date.
@@ -477,6 +540,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                             dueDateTime = newDateTime // Update the dueDateTime state.
                             // Validate the new date-time and update the error state.
                             dateError = validateDateTime(newDateTime, today, dateTimeFormatter)
+                            Log.d(TAG, "Time selected: $newDateTime, error: $dateError")
                             // If the date is in the past, show a Toast message.
                             if (dateError == "Date and time cannot be in the past") {
                                 actionState = ActionState.ValidationError("Due date cannot be in the past")
@@ -507,14 +571,20 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                     readOnly = true, // Prevents direct text input.
                     textStyle = TextStyle(fontSize = 20.sp), // Increased input text size.
                     trailingIcon = {
-                        IconButton(onClick = { expanded = true }) { // Opens the dropdown menu when clicked.
+                        IconButton(onClick = {
+                            expanded = true // Opens the dropdown menu when clicked.
+                            Log.d(TAG, "Priority dropdown opened")
+                        }) {
                             Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Priority") // Dropdown arrow icon.
                         }
                     }
                 )
                 DropdownMenu(
                     expanded = expanded, // Shows the dropdown when expanded is true.
-                    onDismissRequest = { expanded = false }, // Closes the dropdown when dismissed.
+                    onDismissRequest = {
+                        expanded = false // Closes the dropdown when dismissed.
+                        Log.d(TAG, "Priority dropdown dismissed")
+                    },
                     modifier = Modifier.fillMaxWidth() // Makes the dropdown as wide as the text field.
                 ) {
                     // Populate the dropdown with priority options: High, Medium, Low.
@@ -524,6 +594,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                             onClick = {
                                 priority = option // Update the priority state with the selected option.
                                 expanded = false // Close the dropdown.
+                                Log.d(TAG, "Priority selected: $option")
                             }
                         )
                     }
@@ -535,7 +606,10 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = isCompleted, // Binds the checkbox to the isCompleted state variable.
-                        onCheckedChange = { isCompleted = it } // Updates the completion status when the checkbox is toggled.
+                        onCheckedChange = {
+                            isCompleted = it // Updates the completion status when the checkbox is toggled.
+                            Log.d(TAG, "Completed status changed to: $it")
+                        }
                     )
                     Text("Completed", style = TextStyle(fontSize = 18.sp)) // Checkbox label with increased font size.
                 }
@@ -574,6 +648,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                             priority = priority,
                             isCompleted = if (taskId == -1) false else isCompleted // New tasks are not completed by default.
                         )
+                        Log.d(TAG, "Saving task: ${task.toString()}")
                         if (taskId == -1) {
                             // Insert a new task into the database.
                             viewModel.insert(task)
@@ -599,6 +674,7 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
                         onClick = {
                             // Find the task with the given ID and delete it from the database.
                             viewModel.allTasks.value?.find { it.id == taskId }?.let { task ->
+                                Log.d(TAG, "Deleting task: ${task.toString()}")
                                 viewModel.delete(task)
                                 // Set actionState to trigger a success Toast and navigation.
                                 actionState = ActionState.DeleteSuccess
@@ -614,7 +690,6 @@ fun AddEditScreen(taskId: Int, viewModel: TaskViewModel, navController: NavContr
         }
     }
 }
-
 
 // Validates the date-time string to ensure it is in the correct format and not in the past.
 // Parameters:
