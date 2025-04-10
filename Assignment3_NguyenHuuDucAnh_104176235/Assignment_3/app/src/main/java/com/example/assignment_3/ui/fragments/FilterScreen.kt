@@ -1,5 +1,6 @@
 package com.example.assignment_3.ui.fragments
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -10,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
 import com.example.assignment_3.ui.viewmodel.TaskViewModel
+
+private const val TAG = "FilterScreen"  // Added TAG constant for logging
 
 // FilterScreen is a composable function that displays a UI for filtering tasks by priority.
 // It takes a TaskViewModel to manage filter state and a callback to notify when a filter is selected.
@@ -24,6 +27,9 @@ fun FilterScreen(viewModel: TaskViewModel, onFilterSelected: (String) -> Unit) {
     val configuration = LocalConfiguration.current
     // Determines if the device is in landscape mode for layout adjustments.
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Log initial state
+    Log.d(TAG, "Screen initialized, isLandscape: $isLandscape, initial filter: $selectedPriority")
 
     // Main layout: a column that fills the screen with padding and spaced elements.
     Column(
@@ -53,7 +59,10 @@ fun FilterScreen(viewModel: TaskViewModel, onFilterSelected: (String) -> Unit) {
                 readOnly = true, // Prevents manual text input.
                 trailingIcon = {
                     // Button to toggle the dropdown menu visibility.
-                    IconButton(onClick = { expanded = true }) {
+                    IconButton(onClick = {
+                        expanded = true
+                        Log.d(TAG, "Dropdown opened")
+                    }) {
                         Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Priority") // Arrow icon for dropdown.
                     }
                 }
@@ -61,7 +70,10 @@ fun FilterScreen(viewModel: TaskViewModel, onFilterSelected: (String) -> Unit) {
             // Dropdown menu that appears when the trailing icon is clicked.
             DropdownMenu(
                 expanded = expanded, // Visibility controlled by the expanded state.
-                onDismissRequest = { expanded = false }, // Closes the menu when clicked outside.
+                onDismissRequest = {
+                    expanded = false
+                    Log.d(TAG, "Dropdown dismissed")
+                }, // Closes the menu when clicked outside.
                 modifier = Modifier.fillMaxWidth() // Matches the width of the text field.
             ) {
                 // List of priority options to display in the dropdown.
@@ -74,6 +86,7 @@ fun FilterScreen(viewModel: TaskViewModel, onFilterSelected: (String) -> Unit) {
                             expanded = false
                             viewModel.setFilter(option) // Updates the filter in the ViewModel.
                             onFilterSelected(option) // Invokes the callback with the selected filter.
+                            Log.d(TAG, "Filter selected: $option")
                         }
                     )
                 }
