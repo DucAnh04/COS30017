@@ -1,6 +1,7 @@
 package com.example.assignment_3.ui
 
 import android.os.Bundle
+import android.util.Log 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
@@ -29,11 +30,14 @@ import com.example.assignment_3.ui.viewmodel.TaskViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 
+private const val TAG = "MainActivity"  // Added TAG constant for logging
+
 // MainActivity is the entry point of the app, extending ComponentActivity to use Jetpack Compose.
 class MainActivity : ComponentActivity() {
     // onCreate is called when the activity is first created.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "MainActivity onCreate called")
         // Set the content of the activity using Jetpack Compose.
         setContent {
             TaskMasterApp() // Launch the main composable for the app.
@@ -50,6 +54,8 @@ fun TaskMasterApp() {
     // Initialize the TaskViewModel using the viewModel() factory, shared across all screens.
     val viewModel: TaskViewModel = viewModel()
 
+    Log.d(TAG, "TaskMasterApp initialized, starting with taskList screen")
+
     // Use Scaffold to provide a consistent layout structure with a bottom navigation bar.
     Scaffold(
         bottomBar = {
@@ -65,28 +71,34 @@ fun TaskMasterApp() {
         ) {
             // Define the "taskList" route, which displays the TaskListScreen.
             composable("taskList") {
+                Log.d(TAG, "Navigating to TaskListScreen")
                 TaskListScreen(
                     viewModel = viewModel, // Pass the shared ViewModel to manage task data.
                     onTaskClick = { task ->
                         // Navigate to the AddEditScreen with the task's ID when a task is clicked.
+                        Log.d(TAG, "Task clicked, navigating to addEdit/${task.id}")
                         navController.navigate("addEdit/${task.id}")
                     },
                     onAddTask = {
                         // Navigate to the AddEditScreen with taskId -1 to add a new task.
+                        Log.d(TAG, "Add Task clicked, navigating to addEdit/-1")
                         navController.navigate("addEdit/-1")
                     }
                 )
             }
             // Define the "summary" route, which displays the SummaryScreen.
             composable("summary") {
+                Log.d(TAG, "Navigating to SummaryScreen")
                 SummaryScreen(viewModel = viewModel) // Pass the shared ViewModel to display task statistics.
             }
             // Define the "filter" route, which displays the FilterScreen.
             composable("filter") {
+                Log.d(TAG, "Navigating to FilterScreen")
                 FilterScreen(
                     viewModel = viewModel, // Pass the shared ViewModel to manage filter state.
                     onFilterSelected = { priority ->
                         // Navigate back to the task list after a filter is selected.
+                        Log.d(TAG, "Filter selected: $priority, navigating back to taskList")
                         navController.navigate("taskList")
                     }
                 )
@@ -98,6 +110,7 @@ fun TaskMasterApp() {
             ) { backStackEntry ->
                 // Extract the taskId from the navigation arguments, defaulting to -1 if not found.
                 val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
+                Log.d(TAG, "Navigating to AddEditScreen with taskId: $taskId")
                 AddEditScreen(
                     taskId = taskId, // Pass the taskId to determine if we're adding or editing a task.
                     viewModel = viewModel, // Pass the shared ViewModel to manage task data.
@@ -122,6 +135,8 @@ fun BottomNavigationBar(navController: NavHostController) {
     val currentRoute by navController.currentBackStackEntryAsState()
     val selectedRoute = currentRoute?.destination?.route
 
+    Log.d(TAG, "Rendering BottomNavigationBar, current route: $selectedRoute")
+
     // Use NavigationBar to display the bottom navigation items.
     NavigationBar {
         items.forEach { item ->
@@ -131,11 +146,14 @@ fun BottomNavigationBar(navController: NavHostController) {
                 selected = selectedRoute == item.route, // Highlight the item if its route matches the current route.
                 onClick = {
                     if (selectedRoute != item.route) { // Only navigate if the current route is different.
+                        Log.d(TAG, "NavigationBarItem clicked: ${item.title}, navigating to ${item.route}")
                         navController.navigate(item.route) {
                             // Pop the back stack up to the start destination to avoid stacking screens.
                             popUpTo(navController.graph.startDestinationId) { inclusive = false }
                             launchSingleTop = true // Ensure only one instance of the destination is on the stack.
                         }
+                    } else {
+                        Log.d(TAG, "NavigationBarItem clicked: ${item.title}, already on ${item.route}, no navigation")
                     }
                 }
             )
